@@ -1,64 +1,87 @@
-# 🥋 Stellar Crowdfund — Yellow Belt dApp
+# 🥋 Stellar Crowdfund — Orange Belt dApp
 
-A multi-wallet **Soroban** crowdfunding dApp on the **Stellar Testnet**. Pledge testnet XLM by invoking a token **smart contract**, watch the progress bar and activity feed **sync from on-chain contract events in real time**, and track your transaction from *pending* to *confirmed*.
+A production-shaped **Soroban** crowdfunding dApp on the **Stellar Testnet**, built around a **custom Rust smart contract** that escrows pledges. Donors pledge testnet XLM; the contract pulls the tokens in via an **inter-contract call**, tracks every donor on chain, and streams live events to a mobile-responsive Next.js frontend. If the goal is met the beneficiary can withdraw; if the deadline passes unmet, donors can refund.
 
-Built for the Rise In **Yellow Belt** challenge (Level 2).
+Built for the Rise In **Orange Belt** challenge (Level 3).
 
 **🔗 Live demo:** https://stellar-yellow-belt-navy.vercel.app/
 **💻 Source:** https://github.com/Yormee-103/stellar-yellow-belt
 
-> Stack: **Next.js 15 (App Router)**, **Tailwind CSS v4**, **StellarWalletsKit** (multi-wallet), `@stellar/stellar-sdk` (Soroban RPC), and the **Stellar CLI** for contract deployment.
+> Stack: **Rust / Soroban SDK 22** (custom contract) · **Next.js 15 (App Router)** · **Tailwind CSS v4** · **StellarWalletsKit** (multi-wallet) · `@stellar/stellar-sdk` (Soroban RPC) · **Vitest** + **cargo test** · **GitHub Actions** CI/CD · **Vercel**.
 
 ---
 
-## What it does (Level 2 requirements)
+## Level 3 requirements → where they're met
 
 | Requirement | How it's met |
 |---|---|
-| **Multi-wallet integration** | `StellarWalletsKit` with `allowAllModules()` — Freighter, xBull, Albedo, Lobstr, Rabet, Hana, and more. A wallet grid shows which are detected. |
-| **Contract deployed on testnet** | A **FUND** Stellar Asset Contract we deployed via the Stellar CLI (address + deploy tx below). |
-| **Contract called from the frontend** | Pledging invokes `transfer(from, to, amount)` on the token contract via Soroban RPC (`simulate → prepare → sign → send`). |
-| **Reading & writing contract data** | *Reads:* FUND token `name`/`symbol`/`decimals` and the campaign `balance`. *Writes:* the `transfer` pledge. |
-| **Real-time event integration** | Polls Soroban `getEvents` for `transfer` events to the campaign every 5s → live progress bar + "Live pledges" feed. |
-| **Transaction status tracking** | A stepper shows `building → signing → submitting → pending → confirmed`, polling `getTransaction` until final. |
-| **3+ error types handled** | (1) wallet not found / not installed, (2) user rejected the signature, (3) insufficient balance — each classified and shown distinctly. |
+| **Advanced smart contract** | Custom Rust `crowdfund` escrow contract: `pledge` / `withdraw` / `refund`, per-donor on-chain ledger, goal + deadline gating, typed `#[contracterror]` errors. → [contracts/crowdfund/src/lib.rs](contracts/crowdfund/src/lib.rs) |
+| **Inter-contract communication** | The contract calls `token::Client::transfer(...)` on a *separate* token contract to move funds into/out of its own escrow address. One `pledge` tx emits **both** a token `transfer` event and the crowdfund `pledge` event. |
+| **Event streaming & real-time updates** | Frontend polls Soroban `getEvents` for the contract's `pledge` events every 5s → live progress bar + activity feed; totals read straight from `total_raised()`. |
+| **Smart contract testing** | 10 Rust unit tests (`cargo test`) exercise pledging, escrow balances, withdrawal, refunds, and every error path against a real Stellar Asset Contract. |
+| **Frontend testing** | 25 Vitest tests over unit conversion, error classification, and a component render test. |
+| **CI/CD pipeline** | GitHub Actions builds + tests the contract (wasm artifact) and the frontend on every push/PR; a deploy workflow ships the frontend to Vercel. → [.github/workflows](.github/workflows) |
+| **Deployment workflow** | One-command [scripts/deploy.sh](scripts/deploy.sh): build wasm → deploy → initialize campaign → print the address + env var. |
+| **Mobile responsive** | Fluid layout, stacked controls on small screens, `viewport` meta, tap-friendly targets. |
+| **Error handling & loading states** | Typed errors (wallet / rejected / insufficient / mapped contract reverts), a `building→signing→submitting→pending→confirmed` stepper, and skeleton/"…" loading states. |
+| **Production architecture** | Pure, tested lib modules (`units`, `errors`) split from SDK/DOM code; env-configurable contract id; optimized release wasm profile. |
+
+---
+
+## The smart contract
+
+A crowdfunding **escrow** contract — full write-up in [contracts/README.md](contracts/README.md).
+
+| Function | Auth | Description |
+|---|---|---|
+| `initialize(admin, beneficiary, token, goal, deadline)` | admin | One-time campaign setup. |
+| `pledge(donor, amount) -> raised` | donor | Escrows tokens via an **inter-contract** `transfer`; records the donor. |
+| `withdraw() -> amount` | beneficiary | Sends the pot to the beneficiary once the goal is met. |
+| `refund(donor) -> amount` | donor | Returns a donor's contribution after a failed deadline. |
+| `total_raised` / `pledged_by` / `goal` / `deadline` / `goal_reached` / `beneficiary` / `token` | — | Read-only views. |
+
+**Why it's genuinely inter-contract:** `pledge`, `withdraw`, and `refund` each construct a `token::Client` for a *different* deployed contract and invoke its `transfer` — the crowdfund contract holds and moves real tokens at `env.current_contract_address()`. The event log of a single pledge proves it (token `transfer` + crowdfund `pledge` in one tx).
 
 ---
 
 ## On-chain details (Stellar Testnet)
 
-- **FUND token contract (deployed by us):**
-  `CDIYLEBXTJKNTJF56AFXOMOANHNZZW6SHQ7AB6B2KJZ7TSNLCUEC6IJE`
-  Deploy tx: `bb3d26aa644e814d853c7a8e203a28107d820031cbc4f0f227788e2dbc280352`
-  → https://stellar.expert/explorer/testnet/contract/CDIYLEBXTJKNTJF56AFXOMOANHNZZW6SHQ7AB6B2KJZ7TSNLCUEC6IJE
+- **Custom crowdfund contract (Rust, deployed by us):**
+  `CAOBIEYX3QTUV3AKZ2XEPWZIXJRGTGJ7YM3GDK3BTXJ4DTOGSLF2ZWPH`
+  → https://stellar.expert/explorer/testnet/contract/CAOBIEYX3QTUV3AKZ2XEPWZIXJRGTGJ7YM3GDK3BTXJ4DTOGSLF2ZWPH
+  - Wasm hash: `6a11605a35fecc6d61e24162bb852dcd713ad65b90ed189abb8686597be54bfe`
+  - **Deploy tx:** `bcab50e8dccc85c845e96c45b29b6472ac8b8ea34b5bd8efacdd6ed4c5b56d78`
+  - Initialize tx: `c5eff4ac57884e1bf67810ba392e0fc7af9f4c36a54b1a794c9d4e5a099fa634`
 
-- **Pledge token contract (native XLM SAC, used for `transfer` + events):**
+- **Example contract-call transaction — a real `pledge` (inter-contract transfer):**
+  `e2651dd4e70b9b558db37f7a14f52ad979472dbf23f49d0a753bb097fefb3189`
+  → https://stellar.expert/explorer/testnet/tx/e2651dd4e70b9b558db37f7a14f52ad979472dbf23f49d0a753bb097fefb3189
+
+- **Pledge token (native XLM Stellar Asset Contract):**
   `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
 
-- **Campaign beneficiary account:**
-  `GBIYZWNE6HGKGGT2G73W6F7ZXXRQ2LP3RGLYIOOTZH6557A3EEBB4S7D`
+- **FUND token (SAC from Level 2, still read for live metadata):**
+  `CDIYLEBXTJKNTJF56AFXOMOANHNZZW6SHQ7AB6B2KJZ7TSNLCUEC6IJE`
 
-- **Example contract-call transaction (a `transfer` pledge, verifiable on Explorer):**
-  `672a3701421a40f14cb7aec805e80e4ec033e08073533720819727fd5059a0a9`
-  → https://stellar.expert/explorer/testnet/tx/672a3701421a40f14cb7aec805e80e4ec033e08073533720819727fd5059a0a9
+- **Beneficiary / admin:** `GDK5XNJWQTEGIS7R2ZDOM4GC5TUVUTCQPUA6MFF7RN6DGN6HMAQAO5C5`
 
----
-
-## Why two contracts?
-
-The FUND asset contract is the one **we deployed** (proof of the deploy skill), and the app reads its live metadata. Pledges themselves are made in **XLM through the native token contract** so that **anyone with testnet XLM can pledge without first setting up a trustline** — a smoother, more reliable demo. Both are genuine Soroban contract calls.
+> Native XLM is used as the pledge token so anyone with testnet XLM can pledge without setting up a trustline — a smoother demo. It's still a genuine Soroban token contract call driven by our escrow contract.
 
 ---
 
 ## Screenshots
 
-**Wallet options available** (multi-wallet picker)
+**Mobile responsive UI**
 
-![Wallet options](screenshots/wallets.png)
+![Mobile responsive](screenshots/mobile.png)
 
-**Connected wallet**
+**CI/CD pipeline running**
 
-![Connected](screenshots/connected.png)
+![CI pipeline](screenshots/ci.png)
+
+**Test output (contract + frontend, 3+ passing)**
+
+![Tests passing](screenshots/tests.png)
 
 **Confirmed contract-call transaction** (pending → confirmed, with hash)
 
@@ -66,57 +89,76 @@ The FUND asset contract is the one **we deployed** (proof of the deploy skill), 
 
 ---
 
-## Run locally
+## Repository layout
 
-**Prerequisites:** Node 18+ and a Stellar wallet browser extension (e.g. [Freighter](https://freighter.app)) set to **Testnet** with a funded account.
-
-```bash
-# 1. clone
-git clone <your-repo-url>
-cd <repo>
-
-# 2. install
-npm install
-
-# 3. run
-npm run dev
-# open the printed URL (e.g. http://localhost:3000)
 ```
-
-Then: **Choose a wallet → connect → enter an amount → Pledge XLM → approve in your wallet.** The progress bar and live feed update automatically.
-
-> Need testnet XLM? Fund your address at the [Stellar Friendbot](https://friendbot.stellar.org) or the Freighter faucet.
+app/                     # Next.js App Router UI (client component)
+components/               # WalletGrid, TxStatus
+lib/
+  config.js               # network + contract addresses (env-overridable)
+  units.js                # pure unit helpers (tested)
+  errors.js               # typed errors + contract-error mapping (tested)
+  soroban.js              # contract calls, reads, event streaming, tx polling
+  wallet.js               # StellarWalletsKit multi-wallet integration
+contracts/
+  crowdfund/src/lib.rs     # the custom Soroban contract
+  crowdfund/src/test.rs    # 10 unit tests
+test/                     # Vitest suites (units, errors, TxStatus)
+scripts/deploy.sh         # build → deploy → initialize on testnet
+.github/workflows/        # ci.yml (test/build) + deploy.yml (Vercel)
+```
 
 ---
 
-## How the contract was deployed
+## Run locally
 
-The FUND token contract was deployed with the [Stellar CLI](https://developers.stellar.org/docs/tools/cli):
+**Prerequisites:** Node 18+, a Stellar wallet extension (e.g. [Freighter](https://freighter.app)) set to **Testnet** with a funded account.
 
 ```bash
-# identity + funding
-stellar keys generate crowdfund --network testnet --fund
-
-# deploy the FUND asset as a Stellar Asset Contract
-stellar contract asset deploy \
-  --asset FUND:$(stellar keys address crowdfund) \
-  --source crowdfund --network testnet
+git clone https://github.com/Yormee-103/stellar-yellow-belt
+cd stellar-yellow-belt
+npm install
+npm run dev          # open the printed URL (e.g. http://localhost:3000)
 ```
 
-## Project structure
+Then: **choose a wallet → connect → enter an amount → Pledge XLM → approve.** The progress bar, your pledged total, and the live feed update automatically.
 
+> Need testnet XLM? Fund your address at the [Stellar Friendbot](https://friendbot.stellar.org).
+
+---
+
+## Tests
+
+```bash
+# Frontend (Vitest) — 25 tests
+npm test
+
+# Contract (cargo) — 10 tests
+cd contracts && cargo test
 ```
-app/
-  page.js            # main crowdfunding UI (client component)
-  layout.js          # metadata + fonts
-components/
-  WalletGrid.jsx     # multi-wallet picker ("wallet options available")
-  TxStatus.jsx       # pending → success/fail stepper
-lib/
-  config.js          # network + contract addresses
-  wallet.js          # StellarWalletsKit integration
-  soroban.js         # contract calls, reads, events, tx polling, error types
+
+> On Windows the contract's host test link needs LLVM `lld` (configured in `contracts/.cargo/config.toml`); CI runs on Ubuntu with no extra setup.
+
+---
+
+## Build & deploy the contract
+
+```bash
+# build the optimized wasm
+cd contracts && stellar contract build
+
+# or do everything (build → deploy → initialize) and print the address:
+./scripts/deploy.sh
 ```
+
+Set the printed id as `NEXT_PUBLIC_CROWDFUND_CONTRACT_ID` locally and in Vercel.
+
+---
+
+## CI/CD
+
+- **[ci.yml](.github/workflows/ci.yml)** — on every push/PR: `npm ci` → Vitest → `next build`; and in parallel `cargo test` → `stellar contract build` → upload the wasm artifact.
+- **[deploy.yml](.github/workflows/deploy.yml)** — on push to `main`: builds and deploys the frontend to Vercel (skips cleanly if `VERCEL_TOKEN` isn't set, so Vercel's own Git integration can handle it instead).
 
 ---
 
