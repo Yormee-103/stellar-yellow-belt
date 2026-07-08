@@ -4,7 +4,7 @@ A multi-wallet **Soroban** crowdfunding dApp on the **Stellar Testnet**. Pledge 
 
 Built for the Rise In **Yellow Belt** challenge (Level 2).
 
-**🔗 Live demo:** _add your Vercel URL here (optional)_
+**🔗 Live demo:** https://stellar-yellow-belt-navy.vercel.app/
 **💻 Source:** https://github.com/Yormee-103/stellar-yellow-belt
 
 > Stack: **Next.js 15 (App Router)**, **Tailwind CSS v4**, **StellarWalletsKit** (multi-wallet), `@stellar/stellar-sdk` (Soroban RPC), and the **Stellar CLI** for contract deployment.
