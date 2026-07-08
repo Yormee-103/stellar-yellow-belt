@@ -12,9 +12,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Stellar Crowdfund — Yellow Belt dApp",
+  title: "Stellar Crowdfund — Orange Belt dApp",
   description:
-    "Multi-wallet Soroban crowdfunding dApp on Stellar testnet with real-time contract events and transaction status tracking.",
+    "A custom Soroban crowdfunding escrow contract on Stellar testnet: inter-contract token transfers, on-chain per-donor accounting, real-time contract events, and transaction status tracking.",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#0b1020",
 };
 
 export default function RootLayout({ children }) {
