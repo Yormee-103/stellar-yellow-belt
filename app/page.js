@@ -48,10 +48,25 @@ export default function Home() {
 
   // ---- initial load: wallet list + FUND contract metadata ----
   useEffect(() => {
-    listWallets().then(setWallets).catch(() => {});
+    // Wallet extensions inject asynchronously, so `isAvailable` can be a false
+    // negative right after load. Re-poll a few times so the badges self-correct.
+    let tries = 0;
+    const refreshWallets = () =>
+      listWallets()
+        .then(setWallets)
+        .catch(() => {});
+    refreshWallets();
+    const id = setInterval(() => {
+      tries++;
+      refreshWallets();
+      if (tries >= 4) clearInterval(id);
+    }, 600);
+
     readFundTokenMetadata()
       .then(setFundMeta)
       .catch(() => setFundMeta(null));
+
+    return () => clearInterval(id);
   }, []);
 
   // ---- real-time state sync: poll campaign balance + contract events ----
@@ -83,13 +98,9 @@ export default function Home() {
   // ---- connect / disconnect ----
   async function handlePick(w) {
     setError(null);
-    if (!w.isAvailable) {
-      setError({
-        type: "wallet",
-        message: `${w.name} isn't installed. Install it, or pick a detected wallet.`,
-      });
-      return;
-    }
+    // NOTE: we do NOT block on `w.isAvailable` — that flag can be a false
+    // negative if the extension injected late. We attempt the connection and
+    // only report an error if it genuinely fails.
     setBusy(true);
     try {
       const { address: addr } = await connectWallet(w.id);
@@ -98,11 +109,19 @@ export default function Home() {
       await refreshBalance(addr);
     } catch (e) {
       // Error type #1 — wallet not found / access problem.
+      const raw = (e?.message || "").toLowerCase();
+      const notInstalled =
+        raw.includes("not installed") ||
+        raw.includes("not available") ||
+        raw.includes("no wallet") ||
+        raw.includes("could not") ||
+        raw.includes("undefined");
       setError({
         type: "wallet",
-        message:
-          e?.message ||
-          `Could not connect to ${w.name}. Make sure it's unlocked and on Testnet.`,
+        message: notInstalled
+          ? `${w.name} isn't responding. Make sure the extension is installed, unlocked, and set to Testnet, then reload the page.`
+          : e?.message ||
+            `Could not connect to ${w.name}. Make sure it's unlocked and on Testnet.`,
       });
     } finally {
       setBusy(false);

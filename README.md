@@ -39,8 +39,8 @@ Built for the Rise In **Yellow Belt** challenge (Level 2).
   `GBIYZWNE6HGKGGT2G73W6F7ZXXRQ2LP3RGLYIOOTZH6557A3EEBB4S7D`
 
 - **Example contract-call transaction (a `transfer` pledge, verifiable on Explorer):**
-  `3725c38cc123e6d5f07ff2150455e34a0b6aa13f078652f71c2a1c3774cc4494`
-  → https://stellar.expert/explorer/testnet/tx/3725c38cc123e6d5f07ff2150455e34a0b6aa13f078652f71c2a1c3774cc4494
+  `672a3701421a40f14cb7aec805e80e4ec033e08073533720819727fd5059a0a9`
+  → https://stellar.expert/explorer/testnet/tx/672a3701421a40f14cb7aec805e80e4ec033e08073533720819727fd5059a0a9
 
 ---
 
@@ -52,9 +52,17 @@ The FUND asset contract is the one **we deployed** (proof of the deploy skill), 
 
 ## Screenshots
 
-| Wallet options available | Real-time progress + confirmed pledge |
-|---|---|
-| ![Wallet options](screenshots/wallets.png) | ![Confirmed pledge](screenshots/transaction.png) |
+**Wallet options available** (multi-wallet picker)
+
+![Wallet options](screenshots/wallets.png)
+
+**Connected wallet**
+
+![Connected](screenshots/connected.png)
+
+**Confirmed contract-call transaction** (pending → confirmed, with hash)
+
+![Confirmed pledge](screenshots/transaction.png)
 
 ---
 
