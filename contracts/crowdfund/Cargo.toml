@@ -1,0 +1,15 @@
+[package]
+name = "crowdfund"
+version = { workspace = true }
+edition = { workspace = true }
+description = "A Soroban crowdfunding contract that escrows token pledges toward a goal, with per-donor accounting, deadline-gated withdrawal, and refunds."
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
