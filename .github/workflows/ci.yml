@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same ref to save minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Frontend: install, unit-test (Vitest), and production build the Next.js app.
+  # ---------------------------------------------------------------------------
+  frontend:
+    name: Frontend (test + build)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests (Vitest)
+        run: npm test
+
+      - name: Build (Next.js production build)
+        run: npm run build
+
+  # ---------------------------------------------------------------------------
+  # Contract: build the Soroban wasm and run the Rust unit tests.
+  # The optimized wasm is uploaded as an artifact for the deploy workflow.
+  # ---------------------------------------------------------------------------
+  contract:
+    name: Soroban contract (test + build wasm)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust (stable + wasm target)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none, wasm32-unknown-unknown
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            contracts/target
+          key: cargo-${{ runner.os }}-${{ hashFiles('contracts/**/Cargo.lock', 'contracts/**/Cargo.toml') }}
+          restore-keys: cargo-${{ runner.os }}-
+
+      - name: Run contract tests
+        run: cargo test --workspace
+
+      - name: Install Stellar CLI
+        run: cargo install --locked stellar-cli --version 22.8.2 || cargo install --locked stellar-cli
+
+      - name: Build optimized wasm
+        run: stellar contract build
+
+      - name: Upload wasm artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: crowdfund-wasm
+          path: contracts/target/wasm32*/release/crowdfund.wasm
+          if-no-files-found: warn
