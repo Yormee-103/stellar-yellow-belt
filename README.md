@@ -77,11 +77,11 @@ A crowdfunding **escrow** contract — full write-up in [contracts/README.md](co
 
 **CI/CD pipeline running**
 
-![CI pipeline](screenshots/ci.png)
+![CI pipeline](screenshots/cicdpipeline.png)
 
 **Test output (contract + frontend, 3+ passing)**
 
-![Tests passing](screenshots/tests.png)
+![Tests passing](screenshots/testreport.png)
 
 **Confirmed contract-call transaction** (pending → confirmed, with hash)
 
