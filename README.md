@@ -73,7 +73,7 @@ A crowdfunding **escrow** contract — full write-up in [contracts/README.md](co
 
 **Mobile responsive UI**
 
-![Mobile responsive](screenshots/mobile.png)
+![Mobile responsive](screenshots/mobile.jpeg)
 
 **CI/CD pipeline running**
 
