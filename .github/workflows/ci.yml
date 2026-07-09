@@ -28,11 +28,15 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        # `npm install` (not `npm ci`) tolerates the platform-specific optional
+        # deps that vitest/rolldown resolve differently on Linux CI vs the
+        # Windows dev machine the lockfile was generated on. It still installs
+        # from package-lock.json when consistent.
+        run: npm install --no-audit --no-fund
 
       - name: Run unit tests (Vitest)
         run: npm test
