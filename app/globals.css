@@ -3,13 +3,19 @@
 :root {
   --background: #0b1020;
   --foreground: #e8ecf8;
+  /* Network-free system font stacks (no build-time Google Fonts fetch, so CI
+     builds are deterministic). */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 }
 
 body {
@@ -18,6 +24,6 @@ body {
     radial-gradient(1000px 500px at 100% 0%, rgba(56, 189, 248, 0.14), transparent 55%),
     var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
   min-height: 100vh;
 }
