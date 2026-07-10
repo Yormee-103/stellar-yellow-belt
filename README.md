@@ -7,7 +7,7 @@ A production-shaped **Soroban** crowdfunding dApp on the **Stellar Testnet**, bu
 Built for the Rise In **Orange Belt** challenge (Level 3).
 
 **🔗 Live demo:** https://stellar-yellow-belt-navy.vercel.app/
-**🎬 Demo video:** _add your 1–2 min video link here (YouTube / Loom)_
+**🎬 Demo video:** https://www.loom.com/share/9c93d6c1bc8d40e7919351fcdadd05a4
 **💻 Source:** https://github.com/Yormee-103/stellar-yellow-belt
 
 > Stack: **Rust / Soroban SDK 22** (custom contract) · **Next.js 15 (App Router)** · **Tailwind CSS v4** · **StellarWalletsKit** (multi-wallet) · `@stellar/stellar-sdk` (Soroban RPC) · **Vitest** + **cargo test** · **GitHub Actions** CI/CD · **Vercel**.
