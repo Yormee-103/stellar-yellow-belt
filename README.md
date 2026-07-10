@@ -1,10 +1,13 @@
 # 🥋 Stellar Crowdfund — Orange Belt dApp
 
+[![CI](https://github.com/Yormee-103/stellar-yellow-belt/actions/workflows/ci.yml/badge.svg)](https://github.com/Yormee-103/stellar-yellow-belt/actions/workflows/ci.yml)
+
 A production-shaped **Soroban** crowdfunding dApp on the **Stellar Testnet**, built around a **custom Rust smart contract** that escrows pledges. Donors pledge testnet XLM; the contract pulls the tokens in via an **inter-contract call**, tracks every donor on chain, and streams live events to a mobile-responsive Next.js frontend. If the goal is met the beneficiary can withdraw; if the deadline passes unmet, donors can refund.
 
 Built for the Rise In **Orange Belt** challenge (Level 3).
 
 **🔗 Live demo:** https://stellar-yellow-belt-navy.vercel.app/
+**🎬 Demo video:** _add your 1–2 min video link here (YouTube / Loom)_
 **💻 Source:** https://github.com/Yormee-103/stellar-yellow-belt
 
 > Stack: **Rust / Soroban SDK 22** (custom contract) · **Next.js 15 (App Router)** · **Tailwind CSS v4** · **StellarWalletsKit** (multi-wallet) · `@stellar/stellar-sdk` (Soroban RPC) · **Vitest** + **cargo test** · **GitHub Actions** CI/CD · **Vercel**.
