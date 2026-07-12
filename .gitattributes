@@ -1,0 +1,17 @@
+# Normalize line endings across platforms so the repo is consistent
+# regardless of the OS a contributor is on.
+* text=auto eol=lf
+
+# Shell scripts must stay LF (they run in CI on Linux).
+*.sh text eol=lf
+
+# Windows-specific scripts stay CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Treat these as binary (no line-ending conversion, no diff noise).
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.wasm binary
